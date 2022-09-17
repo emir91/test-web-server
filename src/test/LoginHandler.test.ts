@@ -72,4 +72,33 @@ describe("Login Handler Test Suite", () => {
       JSON.stringify(someSessionToken)
     );
   });
+
+  test("post request with invalid login", async () => {
+    getRequestBodyMock.mockReturnValueOnce({
+      username: "test",
+      password: "test",
+    });
+    requestMock.method = HTTP_METHODS.POST;
+    authorizerMock.generateToken.mockReturnValueOnce(null);
+    await loginHandler.handleRequest();
+    expect(responseMock.statusCode).toBe(HTTP_CODES.NOT_fOUND);
+    expect(responseMock.write).toHaveBeenCalledWith(
+      "wrong username or password"
+    );
+  });
+
+  test("post request error case", async () => {
+    requestMock.method = HTTP_METHODS.POST;
+    getRequestBodyMock.mockRejectedValueOnce(
+      new Error("something went wrong!")
+    );
+    await loginHandler.handleRequest();
+    try {
+    } catch (error) {
+      expect(responseMock.statusCode).toBe(HTTP_CODES.INTERNAL_SERVER_ERROR);
+      expect(responseMock.write).toHaveBeenCalledWith(
+        "Internal error: something went wrong!"
+      );
+    }
+  });
 });
