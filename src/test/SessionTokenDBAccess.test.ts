@@ -20,6 +20,8 @@ describe("SessionTokenDBAccess test suite", () => {
     valid: true,
   };
 
+  const someTokenId = "123";
+
   beforeEach(() => {
     sessionTokenDBAccess = new SessionTokenDBAccess(nedbMock as any);
     expect(nedbMock.loadDatabase).toBeCalled();
@@ -29,7 +31,7 @@ describe("SessionTokenDBAccess test suite", () => {
     jest.clearAllMocks();
   });
 
-  test("store session token", async () => {
+  test("store session token - no error", async () => {
     nedbMock.insert.mockImplementation((someToken: any, cb: any) => {
       cb();
     });
@@ -45,5 +47,50 @@ describe("SessionTokenDBAccess test suite", () => {
       sessionTokenDBAccess.storeSessionToken(someToken)
     ).rejects.toThrow("something went wrong");
     expect(nedbMock.insert).toBeCalledWith(someToken, expect.any(Function));
+  });
+
+  test("get token - no error", async () => {
+    nedbMock.find.mockImplementation((someTokenId: string, cb: any) => {
+      cb(null, [someToken]);
+    });
+    const tokenResult = await sessionTokenDBAccess.getToken(someTokenId);
+
+    expect(tokenResult).toBe(someToken);
+    expect(nedbMock.find).toBeCalledWith(
+      { tokenId: someTokenId },
+      expect.any(Function)
+    );
+  });
+
+  test("get token - no error and no result", async () => {
+    nedbMock.find.mockImplementation((someTokenId: string, cb: any) => {
+      cb(null, []);
+    });
+    const tokenResult = await sessionTokenDBAccess.getToken(someTokenId);
+
+    expect(tokenResult).toBe(undefined);
+    expect(nedbMock.find).toBeCalledWith(
+      { tokenId: someTokenId },
+      expect.any(Function)
+    );
+  });
+
+  test("get token - error", async () => {
+    nedbMock.find.mockImplementation((someTokenId: string, cb: any) => {
+      cb(new Error("something went wrong"));
+    });
+
+    await expect(sessionTokenDBAccess.getToken(someTokenId)).rejects.toThrow(
+      "something went wrong"
+    );
+    expect(nedbMock.find).toBeCalledWith(
+      { tokenId: someTokenId },
+      expect.any(Function)
+    );
+  });
+
+  test("constructor argument", async () => {
+    new SessionTokenDBAccess();
+    expect(Nedb).toBeCalledWith("databases/sessionToken.db");
   });
 });
