@@ -10,6 +10,7 @@ describe("SessionTokenDBAccess test suite", () => {
     loadDatabase: jest.fn(),
     insert: jest.fn(),
     find: jest.fn(),
+    remove: jest.fn(),
   };
 
   const someToken: SessionToken = {
@@ -85,6 +86,50 @@ describe("SessionTokenDBAccess test suite", () => {
     );
     expect(nedbMock.find).toBeCalledWith(
       { tokenId: someTokenId },
+      expect.any(Function)
+    );
+  });
+
+  test("delete token - no error", async () => {
+    nedbMock.remove.mockImplementation((someTokenId: string, {}, cb: any) => {
+      cb(null, 1);
+    });
+    const tokenResult = await sessionTokenDBAccess.deleteToken(someTokenId);
+
+    expect(tokenResult).toBeUndefined();
+    expect(nedbMock.remove).toBeCalledWith(
+      { tokenId: someTokenId },
+      {},
+      expect.any(Function)
+    );
+  });
+
+  test("delete token - error", async () => {
+    nedbMock.remove.mockImplementation((someTokenId: string, {}, cb: any) => {
+      cb(new Error("something went wrong"));
+    });
+
+    await expect(sessionTokenDBAccess.deleteToken(someTokenId)).rejects.toThrow(
+      "something went wrong"
+    );
+    expect(nedbMock.remove).toBeCalledWith(
+      { tokenId: someTokenId },
+      {},
+      expect.any(Function)
+    );
+  });
+
+  test("delete missing session token - throws an error", async () => {
+    nedbMock.remove.mockImplementation((someTokenId: string, {}, cb: any) => {
+      cb(null, []);
+    });
+
+    await expect(sessionTokenDBAccess.deleteToken(someTokenId)).rejects.toThrow(
+      "SessionToken not deleted"
+    );
+    expect(nedbMock.remove).toBeCalledWith(
+      { tokenId: someTokenId },
+      {},
       expect.any(Function)
     );
   });
