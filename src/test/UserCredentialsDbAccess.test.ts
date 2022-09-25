@@ -10,6 +10,7 @@ describe("User Credentials BD Access", () => {
     loadDatabase: jest.fn(),
     insert: jest.fn(),
     find: jest.fn(),
+    remove: jest.fn(),
   };
 
   const someUserCredentials: UserCredentials = {
@@ -60,7 +61,7 @@ describe("User Credentials BD Access", () => {
 
     await userCredentialsDbAccess.getUserCredential("test", "test");
     expect(nedbMock.find).toHaveBeenCalledWith(
-      { userName: "test", password: "test" },
+      { username: "test", password: "test" },
       expect.any(Function)
     );
   });
@@ -76,7 +77,7 @@ describe("User Credentials BD Access", () => {
     );
     expect(result).toBeNull();
     expect(nedbMock.find).toHaveBeenCalledWith(
-      { userName: "test", password: "test" },
+      { username: "test", password: "test" },
       expect.any(Function)
     );
   });
@@ -90,7 +91,71 @@ describe("User Credentials BD Access", () => {
       userCredentialsDbAccess.getUserCredential("test", "test")
     ).rejects.toThrow("something went wrong");
     expect(nedbMock.find).toHaveBeenCalledWith(
-      { userName: "test", password: "test" },
+      { username: "test", password: "test" },
+      expect.any(Function)
+    );
+  });
+
+  test("deleteUserCredential - no error", async () => {
+    nedbMock.remove.mockImplementationOnce(
+      (userCredentials: any, {}, cb: any) => {
+        cb(null, 1);
+      }
+    );
+
+    const userResult = await userCredentialsDbAccess.deleteUserCredential(
+      someUserCredentials
+    );
+
+    expect(userResult).toBeUndefined();
+    expect(nedbMock.remove).toBeCalledWith(
+      {
+        username: someUserCredentials.username,
+        password: someUserCredentials.password,
+      },
+      {},
+      expect.any(Function)
+    );
+  });
+
+  test("deleteUserCredential - error", async () => {
+    nedbMock.remove.mockImplementationOnce(
+      (userCredentials: any, {}, cb: any) => {
+        cb(new Error("something went wrong"));
+      }
+    );
+
+    await expect(
+      userCredentialsDbAccess.deleteUserCredential(someUserCredentials)
+    ).rejects.toThrow("something went wrong");
+
+    expect(nedbMock.remove).toBeCalledWith(
+      {
+        username: someUserCredentials.username,
+        password: someUserCredentials.password,
+      },
+      {},
+      expect.any(Function)
+    );
+  });
+
+  test("deleteUserCredential - missing error", async () => {
+    nedbMock.remove.mockImplementationOnce(
+      (userCredentials: any, {}, cb: any) => {
+        cb(null, 0);
+      }
+    );
+
+    await expect(
+      userCredentialsDbAccess.deleteUserCredential(someUserCredentials)
+    ).rejects.toThrow("UserCredentials not deleted!");
+
+    expect(nedbMock.remove).toBeCalledWith(
+      {
+        username: someUserCredentials.username,
+        password: someUserCredentials.password,
+      },
+      {},
       expect.any(Function)
     );
   });
