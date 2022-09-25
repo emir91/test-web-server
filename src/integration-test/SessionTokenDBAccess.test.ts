@@ -12,7 +12,7 @@ describe("SessionTokenDBAccess test suite", () => {
       accessRights: [1, 2, 3],
       expirationTime: new Date(),
       tokenId: "someTokenId" + randomString,
-      userName: "someUsername",
+      username: "someUsername",
       valid: true,
     };
   });
