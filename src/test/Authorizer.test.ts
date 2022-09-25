@@ -48,7 +48,7 @@ describe("Authorizer test suite", () => {
 
     const expectedSessionToken: SessionToken = {
       accessRights: [1, 2, 3],
-      userName: "test",
+      username: "test",
       valid: true,
       expirationTime: new Date(1000 * 60 * 60),
       tokenId: "",

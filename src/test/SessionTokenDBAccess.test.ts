@@ -17,7 +17,7 @@ describe("SessionTokenDBAccess test suite", () => {
     accessRights: [],
     expirationTime: new Date(),
     tokenId: "123",
-    userName: "John",
+    username: "John",
     valid: true,
   };
 
